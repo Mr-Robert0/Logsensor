@@ -76,4 +76,5 @@ optional arguments:
 
 ### Development
 **TODO**  
-1. Fuzzing on Url Paths So as not to miss any login panel
+1. adding "POST form SQli (Time based) scanning" and check for delay 
+2. Fuzzing on Url Paths So as not to miss any login panel
