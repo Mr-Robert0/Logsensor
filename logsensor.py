@@ -9,6 +9,15 @@ from concurrent.futures import ThreadPoolExecutor
 from src import logninputs, payloads, Errors
 from tabulate import tabulate
 
+# Coomon paths to fuzz for 
+common_paths = [
+    "admin", "login", "test", "backup", "passwords.txt", "admin.php", "admin.html", 
+    "login.php", "login.html", "wp-login.php", "user", "dashboard", "cpanel", "panel", 
+    "adm", "user.php", "user.html", "administrator", "db", "database", "phpmyadmin", 
+    "pma", "config", "settings", "edit", "manage", "secure", "webadmin", "wp-admin", 
+    "admin/login", "admin/login.php", "admin/login.html", "admin/index", "admin/index.php", 
+    "admin/index.html"
+]
 
 start = time.time()
 
@@ -45,6 +54,10 @@ parser.add_argument("-s","--sqli", help=" run only POST Form SQLi Scanning with 
 parser.add_argument("-n","--inputname", help=" Customize actual username input for SQLi scan (default 'username' )")
 parser.add_argument("-t","--threads", help=" Number of threads (default 30)" ,type=int)
 parser.add_argument("-h", "--help", action="help", help="Show this help message and exit")
+# Added options to Fuzz URLs before or after login panel detection checks
+parser.add_argument("-fb","--fuzz-before", action='store_true', help="Fuzz URLs before other checks")
+parser.add_argument("-fa","--fuzz-after", action='store_true', help="Fuzz URLs after successful login panel detection")
+
 args = parser.parse_args()
 if len(sys.argv) == 1:
 		ban()
@@ -79,6 +92,10 @@ class main():
 	def __init__(self,lines):
 		self.lines = lines
 		try:
+			# Fuzz URLs before other checks if --fuzz-before was specified
+			if args.fuzz_before:
+				self.fuzz_before()
+
 			req = requests.get(lines, headers=useragent, proxies=proxies, verify=False, timeout=8,allow_redirects=True)
 			response = str(req.content)
 			soup = BeautifulSoup(response, "html.parser")
@@ -102,6 +119,9 @@ class main():
 						if find != None:
 							loginurls.append(req.url +str(action))
 							print(colored("[+] Login panel found ! [{}] - {}","green").format(req.url, req.status_code))
+							# Fuzz URLs after successful login panel detection if --fuzz-after was specified
+							if args.fuzz_after:
+								fuzz_urls(req.url +str(action))
 							break
 						else:
 							pass
@@ -132,6 +152,7 @@ msgurl = colored("[+] ","green",attrs=["bold"])+"injected in "+inputname +" inpu
 msgpyld = colored("[+]","green",attrs=["bold"])+" Payload: "
 msgerr = colored("[+]","green",attrs=["bold"])+ " Detected error: "
 msgreg = colored("[+]","green",attrs=["bold"])+" Regex Used: "
+
 def inject(loginurls, inputname):
 	print(colored("[@] Start POST Form SQLi Scanning [@]","cyan"))
 	try:
@@ -189,6 +210,15 @@ def inject(loginurls, inputname):
 	except KeyboardInterrupt:
 		print("\nStopped")
 		exit(0)
+
+# Added a fucntion to Fuzz the different URLS
+def fuzz_urls(base_url):
+    for path in common_paths:
+        url = base_url + "/" + path
+        response = requests.get(url)
+        if response.status_code == 200:
+            print("Potential hidden resource found at: " + url)
+
 
 if __name__ == '__main__':
 	def sensorWithThreads():

